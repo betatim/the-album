@@ -176,7 +176,11 @@ const FocussedItem = (props) => {
           <ListItem
             disabled
             primaryText="Location (Latitude / Longitude)"
-            secondaryText={`${exif.GPSLatitude[2]} / ${exif.GPSLongitude[2]}`}
+            secondaryText={
+              exif.GPSLatitude ?
+              `${exif.GPSLatitude[2]} / ${exif.GPSLongitude[2]}`
+              :
+              `No GPS information.`}
           />
           <ListItem
             disabled
