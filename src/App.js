@@ -114,7 +114,7 @@ class AlbumApp extends Component {
 }
 
 
-const ImageList = props => {
+const ImageList = (props) => {
   const styles = {
     root: {
       display: 'flex',
@@ -149,11 +149,10 @@ const FocussedItem = (props) => {
   window.URL = window.URL || window.webkitURL;
   const item = props.item;
   const exif = props.exif;
-  var img = document.createElement("img");
-  img.src = window.URL.createObjectURL(item);
+  const img = document.createElement('img');
+  img.src = item.preview;
   const height = img.height;
   const width = img.width;
-  window.URL.revokeObjectURL(img.src);
   console.log(exif);
   return (
     <Card>
@@ -165,6 +164,7 @@ const FocussedItem = (props) => {
       </CardMedia>
       <CardTitle title={item.name} />
       <CardText>
+        {'Items that could not be found in the metadata are displayed as "undefined".'}
         <List>
           <ListItem
             disabled
