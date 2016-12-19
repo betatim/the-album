@@ -1,10 +1,15 @@
 import React, { Component } from 'react';
 
+import Immutable from 'immutable';
+
+import DropZone from 'react-dropzone';
+
 import FlatButton from 'material-ui/FlatButton';
 import { GridList, GridTile } from 'material-ui/GridList';
 import { Card, CardText, CardMedia, CardTitle, CardActions } from 'material-ui/Card';
-import {List, ListItem} from 'material-ui/List';
-import Divider from 'material-ui/Divider';
+import { List, ListItem } from 'material-ui/List';
+
+import EXIF from 'exif-js';
 
 import './App.css';
 
@@ -12,49 +17,52 @@ import './App.css';
 class AlbumApp extends Component {
   constructor(props) {
     super(props);
-    this.handleChange = this.handleChange.bind(this);
-    this.handleSubmit = this.handleSubmit.bind(this);
     this.handleFocusItem = this.handleFocusItem.bind(this);
     this.handleUnFocus = this.handleUnFocus.bind(this);
+    this.handleDrop = this.handleDrop.bind(this);
     this.state = {
-      items: [],
-      text: '',
+      items: Immutable.List(),
       focussed: null,
+      exifInfo: Immutable.Map(),
     };
   }
 
-  handleFocusItem(id) {
-    this.setState({
-      focussed: id,
-    });
+  handleFocusItem(name) {
+    this.setState({ focussed: name });
   }
   handleUnFocus() {
-    this.setState({
-      focussed: null,
-    });
+    this.setState({ focussed: null });
+    // this.setState(state => (state.update('focussed', () => null)));
   }
 
-  handleChange(e) {
-    this.setState({
-      text: e.target.value,
+  handleDrop(files) {
+    this.setState(({ items }) => (
+      { items: items.concat(files) }
+    ));
+    files.forEach((file) => {
+      const reader = new FileReader();
+      reader.onloadend = (e) => {
+        const exif = EXIF.readFromBinaryFile(e.target.result);
+        this.setState(({ exifInfo }) => (
+          { exifInfo: exifInfo.set(file.name, exif) }
+        ));
+      };
+      reader.onloadend.bind(this);
+      reader.readAsArrayBuffer(file);
     });
-  }
-
-  handleSubmit(e) {
-    e.preventDefault();
-    const newItem = {
-      text: this.state.text,
-      id: Date.now(),
-    };
-    this.setState(prevState => ({
-      items: prevState.items.concat(newItem),
-      text: '',
-    }));
   }
 
   render() {
-    const focusItem = this.state.items.find(
-      e => (e.id === this.state.focussed));
+    const { items, focussed, exifInfo } = this.state;
+    const focusItem = items.find(
+      e => (e.name === focussed));
+    const DZstyle = {
+      height: 200,
+      borderWidth: 2,
+      borderColor: '#666',
+      borderStyle: 'dashed',
+      borderRadius: 10,
+    };
     return (
       <div className="mdl-layout mdl-js-layout">
         <header className="mdl-layout__header mdl-layout__header--scroll">
@@ -71,19 +79,21 @@ class AlbumApp extends Component {
               margin: 'auto',
               maxWidth: '900px' }}
           >
-            <form onSubmit={this.handleSubmit}>
-              <input onChange={this.handleChange} value={this.state.text} />
-              <button>{'Add #' + (this.state.items.length + 1)}</button>
-            </form>
+            <DropZone onDrop={this.handleDrop} style={DZstyle}>
+              <div>Try dropping some files here, or click to select
+                files to upload.
+              </div>
+            </DropZone>
             <hr />
-            {this.state.focussed ?
+            {focussed ?
               <FocussedItem
                 item={focusItem}
+                exif={exifInfo.get(focusItem.name)}
                 onClick={this.handleUnFocus}
               />
               :
               <ImageList
-                items={this.state.items}
+                items={items}
                 handleFocus={this.handleFocusItem}
               />
             }
@@ -122,13 +132,13 @@ const ImageList = props => {
     >
       {props.items.map(item => (
         <GridTile
-          key={item.id}
-          title={item.text}
-          onClick={() => props.handleFocus(item.id)}
+          key={item.name + item.size}
+          title={item.name}
+          onClick={() => props.handleFocus(item.name)}
         >
           <img
-            alt={item.text}
-            src="http://indianapublicmedia.org/eartheats/files/2009/12/bicycle.jpg"
+            alt={item.name}
+            src={item.preview}
           />
         </GridTile>
       ))}
@@ -136,21 +146,63 @@ const ImageList = props => {
 };
 
 const FocussedItem = (props) => {
+  window.URL = window.URL || window.webkitURL;
   const item = props.item;
+  const exif = props.exif;
+  var img = document.createElement("img");
+  img.src = window.URL.createObjectURL(item);
+  const height = img.height;
+  const width = img.width;
+  window.URL.revokeObjectURL(img.src);
+  console.log(exif);
   return (
     <Card>
       <CardMedia>
         <img
-          alt={item.text}
-          src="http://indianapublicmedia.org/eartheats/files/2009/12/bicycle.jpg"
+          alt={item.name}
+          src={item.preview}
         />
       </CardMedia>
-      <CardTitle title={item.text} />
+      <CardTitle title={item.name} />
       <CardText>
         <List>
-          <ListItem disabled primaryText="Date" secondaryText="23 Dec 2016 12:34:56" />
-          <ListItem disabled primaryText="Location" secondaryText="Geneva, Switzerland" />
-          <ListItem disabled primaryText="Make" secondaryText="Canon" />
+          <ListItem
+            disabled
+            primaryText="Date (plain, original, digitized, GPS)"
+            secondaryText={
+              `${exif.DateTime}`, `${exif.DateTimeOriginal}`, `${exif.DateTimeDigitized}`, `${exif.GPSDateStamp}`
+            }
+          />
+          <ListItem
+            disabled
+            primaryText="Location (Latitude / Longitude)"
+            secondaryText={`${exif.GPSLatitude}` / `${exif.GPSLongitude}`}
+          />
+          <ListItem
+            disabled
+            primaryText="Make and Model"
+            secondaryText={`${exif.Make} / ${exif.Model}`}
+          />
+          <ListItem
+            disabled
+            primaryText="Exposure, F number, Focal length"
+            secondaryText={`${exif.ExposureTime}, ${exif.FNumber}, ${exif.FocalLength}`}
+          />
+          <ListItem
+            disabled
+            primaryText="Flash"
+            secondaryText={`${exif.Flash}`}
+          />
+          <ListItem
+            disabled
+            primaryText="ISO"
+            secondaryText={`${exif.ISOSpeedRatings}`}
+          />
+          <ListItem
+            disabled
+            primaryText="Recorded and actual image size"
+            secondaryText={`${exif.PixelXDimension}x${exif.PixelYDimension} and ${width}x${height}`}
+          />
         </List>
       </CardText>
       <CardActions className="mdl-card__actions">
