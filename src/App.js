@@ -170,13 +170,13 @@ const FocussedItem = (props) => {
             disabled
             primaryText="Date (plain, original, digitized, GPS)"
             secondaryText={
-              `${exif.DateTime}`, `${exif.DateTimeOriginal}`, `${exif.DateTimeDigitized}`, `${exif.GPSDateStamp}`
+              `${exif.DateTime}, ${exif.DateTimeOriginal}, ${exif.DateTimeDigitized}, ${exif.GPSDateStamp}`
             }
           />
           <ListItem
             disabled
             primaryText="Location (Latitude / Longitude)"
-            secondaryText={`${exif.GPSLatitude}` / `${exif.GPSLongitude}`}
+            secondaryText={`${exif.GPSLatitude[2]} / ${exif.GPSLongitude[2]}`}
           />
           <ListItem
             disabled
