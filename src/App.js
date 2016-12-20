@@ -145,75 +145,96 @@ const ImageList = (props) => {
     </GridList>);
 };
 
-const FocussedItem = (props) => {
-  window.URL = window.URL || window.webkitURL;
-  const item = props.item;
-  const exif = props.exif;
-  const img = document.createElement('img');
-  img.src = item.preview;
-  const height = img.height;
-  const width = img.width;
-  console.log(exif);
-  return (
-    <Card>
-      <CardMedia>
-        <img
-          alt={item.name}
-          src={item.preview}
-        />
-      </CardMedia>
-      <CardTitle title={item.name} />
-      <CardText>
-        {'Items that could not be found in the metadata are displayed as "undefined".'}
-        <List>
-          <ListItem
-            disabled
-            primaryText="Date (plain, original, digitized, GPS)"
-            secondaryText={
-              `${exif.DateTime}, ${exif.DateTimeOriginal}, ${exif.DateTimeDigitized}, ${exif.GPSDateStamp}`
-            }
+class FocussedItem extends Component {
+  constructor(props) {
+    super(props);
+    this.handleKeyDown = this.handleKeyDown.bind(this);
+  }
+  componentDidMount() {
+    document.addEventListener('keydown', this.handleKeyDown);
+  }
+
+  componentWillUnmount() {
+    document.removeEventListener('keydown', this.handleKeyDown);
+  }
+
+  handleKeyDown(event) {
+    if (event.key === 'Escape') {
+      this.props.onClick();
+    }
+  }
+
+  render() {
+    const props = this.props;
+    window.URL = window.URL || window.webkitURL;
+    const item = props.item;
+    const exif = props.exif;
+    const img = document.createElement('img');
+    img.src = item.preview;
+    const height = img.height;
+    const width = img.width;
+    console.log(exif);
+    return (
+      <Card>
+        <CardMedia>
+          <img
+            alt={item.name}
+            src={item.preview}
           />
-          <ListItem
-            disabled
-            primaryText="Location (Latitude / Longitude)"
-            secondaryText={
-              exif.GPSLatitude ?
-              `${exif.GPSLatitude[2]} / ${exif.GPSLongitude[2]}`
-              :
-              `No GPS information.`}
-          />
-          <ListItem
-            disabled
-            primaryText="Make and Model"
-            secondaryText={`${exif.Make} / ${exif.Model}`}
-          />
-          <ListItem
-            disabled
-            primaryText="Exposure, F number, Focal length"
-            secondaryText={`${exif.ExposureTime}, ${exif.FNumber}, ${exif.FocalLength}`}
-          />
-          <ListItem
-            disabled
-            primaryText="Flash"
-            secondaryText={`${exif.Flash}`}
-          />
-          <ListItem
-            disabled
-            primaryText="ISO"
-            secondaryText={`${exif.ISOSpeedRatings}`}
-          />
-          <ListItem
-            disabled
-            primaryText="Recorded and actual image size"
-            secondaryText={`${exif.PixelXDimension}x${exif.PixelYDimension} and ${width}x${height}`}
-          />
-        </List>
-      </CardText>
-      <CardActions className="mdl-card__actions">
-        <FlatButton primary label="Minimise" onClick={() => props.onClick()} />
-      </CardActions>
-    </Card>
-  );
+        </CardMedia>
+        <CardTitle title={item.name} />
+        <CardText>
+          {'Items that could not be found in the metadata are displayed as "undefined".'}
+          <List>
+            <ListItem
+              disabled
+              primaryText="Date (plain, original, digitized, GPS)"
+              secondaryText={
+                `${exif.DateTime}, ${exif.DateTimeOriginal}, ${exif.DateTimeDigitized}, ${exif.GPSDateStamp}`
+              }
+            />
+            <ListItem
+              disabled
+              primaryText="Location (Latitude / Longitude)"
+              secondaryText={
+                exif.GPSLatitude ?
+                `${exif.GPSLatitudeRef} ${exif.GPSLatitude[0]}º ${exif.GPSLatitude[1]}' ${exif.GPSLatitude[2]}" ${exif.GPSLongitudeRef} ${exif.GPSLongitude[0]}º ${exif.GPSLongitude[1]}' ${exif.GPSLongitude[2]}"`
+                :
+                `No GPS information.`}
+            />
+            <ListItem
+              disabled
+              primaryText="Make and Model"
+              secondaryText={`${exif.Make} / ${exif.Model}`}
+            />
+            <ListItem
+              disabled
+              primaryText="Exposure, F number, Focal length"
+              secondaryText={`${exif.ExposureTime}, ${exif.FNumber}, ${exif.FocalLength}`}
+            />
+            <ListItem
+              disabled
+              primaryText="Flash"
+              secondaryText={`${exif.Flash}`}
+            />
+            <ListItem
+              disabled
+              primaryText="ISO"
+              secondaryText={`${exif.ISOSpeedRatings}`}
+            />
+            <ListItem
+              disabled
+              primaryText="Recorded and actual image size"
+              secondaryText={`${exif.PixelXDimension}x${exif.PixelYDimension} and ${width}x${height}`}
+            />
+          </List>
+        </CardText>
+        <CardActions className="mdl-card__actions">
+          <FlatButton primary label="Minimise" onClick={() => props.onClick()} />
+        </CardActions>
+      </Card>
+    );
+  }
 };
 
 
