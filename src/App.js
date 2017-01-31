@@ -11,6 +11,9 @@ import { List, ListItem } from 'material-ui/List';
 
 import EXIF from 'exif-js';
 
+import GoogleMapsUrl from './GoogleMapsUrl';
+import GPSLocation from './GPSLocation';
+
 import './App.css';
 
 
@@ -174,6 +177,7 @@ class FocussedItem extends Component {
     const height = img.height;
     const width = img.width;
     console.log(exif);
+
     return (
       <Card>
         <CardMedia>
@@ -196,11 +200,16 @@ class FocussedItem extends Component {
             <ListItem
               disabled
               primaryText="Location (Latitude / Longitude)"
+              secondaryTextLines={2}
               secondaryText={
                 exif.GPSLatitude ?
-                `${exif.GPSLatitudeRef} ${exif.GPSLatitude[0]}º ${exif.GPSLatitude[1]}' ${exif.GPSLatitude[2]}" ${exif.GPSLongitudeRef} ${exif.GPSLongitude[0]}º ${exif.GPSLongitude[1]}' ${exif.GPSLongitude[2]}"`
+                  <div>
+                    <GPSLocation exif={exif} />
+                    {' '}
+                    <GoogleMapsUrl exif={exif} />
+                  </div>
                 :
-                `No GPS information.`}
+                  'No GPS information.'}
             />
             <ListItem
               disabled
